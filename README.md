@@ -1,60 +1,69 @@
-# Crop-Defect-Detection-V1
+# Crop Defect Detection
 
 ## Project Overview
-This project performs exploratory data analysis on a sugarcane leaf disease image dataset. It scans the dataset folders, counts images per class, computes descriptive statistics, generates visualizations, and writes a summary report. No deep learning model is trained.
+This repository contains a complete image classification pipeline for sugarcane leaf disease detection. It includes dataset preprocessing, transfer learning with EfficientNetB0, training, model evaluation, prediction, Grad-CAM explainability, and a Streamlit demo app.
+
+## What’s Included
+- `main.py`: end-to-end pipeline to prepare data, train or load the model, evaluate performance, make a sample prediction, and save Grad-CAM output.
+- `app.py`: Streamlit application for interactive image upload and disease prediction.
+- `src/`: reusable modules for preprocessing, augmentation, model construction, training, evaluation, prediction, and Grad-CAM.
+- `dataset/`: class-labeled sugarcane leaf images.
+- `graphs/`: generated visualization output, including EDA charts and model training graphs.
+- `models/`: saved model artifacts.
+- `weights/`: saved model weights.
+- `reports/`: saved metrics and classification reports.
+- `predictions/`: prediction and Grad-CAM output images.
 
 ## Dataset Description
-The dataset contains images belonging to five classes:
+The dataset contains images of sugarcane leaves in five classes:
 - Healthy
 - Mosaic
 - RedRot
 - Rust
 - Yellow
 
-## Folder Structure
-- dataset/: contains the raw image folders
-- graphs/: stores generated PNG visualizations
-- notebooks/: place for exploratory notebooks
-- reports/: stores reports and CSV outputs
-- src/: reusable Python modules
+## Environment Setup
+Create and activate a local Python virtual environment before installing dependencies:
 
-## Technologies Used
-- Python
-- Pandas
-- NumPy
-- Matplotlib
-- Seaborn
-- OpenCV
-- scikit-learn
-- Pillow
+```bash
+cd Crop-Defect-Detection-V1
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-## Python Libraries
-- pandas
-- numpy
-- matplotlib
-- seaborn
-- opencv-python
-- scikit-learn
-- Pillow
-- tensorflow
-- streamlit
-- tensorflow-addons
-
-## Screenshots Placeholder
-Add screenshots of the generated charts here.
+> Note: On macOS, use the virtual environment to avoid system package conflicts with TensorFlow and OpenCV.
 
 ## How to Run
+Run the main pipeline:
+
 ```bash
+source .venv/bin/activate
 python main.py
 ```
 
-## Expected Output
-The script will generate:
-- PNG charts in the graphs folder
-- analysis_report.txt in the reports folder
-- class_weights.csv in the reports folder
+Run the Streamlit app:
 
-## Future Improvements
-- Add image preprocessing and augmentation pipelines
-- Integrate a classifier for disease prediction
-- Add automated notebook templates for experimentation
+```bash
+source .venv/bin/activate
+streamlit run app.py
+```
+
+## Output Files
+After running the pipeline, the repository produces:
+- `graphs/training_accuracy.png`
+- `graphs/training_loss.png`
+- `graphs/confusion_matrix.png`
+- `reports/classification_report.txt`
+- `predictions/gradcam_prediction.png`
+- `models/best_model.keras`
+- `weights/best_weights.keras`
+
+## Notes
+- Model training currently uses `EfficientNetB0` as a frozen base and trains a custom top layer.
+- The project saves both the full model and separate weights.
+- `main.py` will load an existing model if `models/best_model.keras` exists.
+
+## Project Documentation
+See `PROJECT_DOCUMENTATION.md` for a full project summary, architecture details, setup instructions, and next steps.
