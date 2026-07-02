@@ -22,13 +22,6 @@ The dataset contains images of sugarcane leaves in five classes:
 - Rust
 - Yellow
 
-Run the Streamlit app:
-
-```bash
-source .venv/bin/activate
-streamlit run app.py
-```
-
 ## Output Files
 After running the pipeline, the repository produces:
 - `graphs/training_accuracy.png`
