@@ -36,6 +36,9 @@ The dataset contains images belonging to five classes:
 - opencv-python
 - scikit-learn
 - Pillow
+- tensorflow
+- streamlit
+- tensorflow-addons
 
 ## Screenshots Placeholder
 Add screenshots of the generated charts here.

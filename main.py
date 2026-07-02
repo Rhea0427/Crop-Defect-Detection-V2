@@ -1,19 +1,19 @@
-"""Entry point for the crop defect detection analytics pipeline."""
+"""Main pipeline for training and evaluating the sugarcane leaf disease model."""
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
 
-from src.analysis import DatasetAnalyzer
-from src.data_loader import DatasetLoader
-from src.report_generator import ReportGenerator
-from src.statistics import StatisticsReporter
-from src.visualization import VisualizationGenerator
+from src.augmentation import apply_augmentation
+from src.evaluate import evaluate_model
+from src.grad_cam import save_gradcam
+from src.predict import load_model_and_weights, predict_image
+from src.preprocess import prepare_datasets
+from src.train import train_model
 
 
 def configure_logging() -> None:
-    """Configure the project logging output."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
@@ -22,51 +22,66 @@ def configure_logging() -> None:
 
 
 def main() -> None:
-    """Run the full dataset analysis pipeline."""
     configure_logging()
     logger = logging.getLogger(__name__)
 
     project_dir = Path(__file__).resolve().parent
     dataset_dir = project_dir / "dataset"
+    models_dir = project_dir / "models"
+    weights_dir = project_dir / "weights"
     graphs_dir = project_dir / "graphs"
     reports_dir = project_dir / "reports"
+    predictions_dir = project_dir / "predictions"
 
     graphs_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
+    predictions_dir.mkdir(parents=True, exist_ok=True)
+    models_dir.mkdir(parents=True, exist_ok=True)
+    weights_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        logger.info("Starting crop defect detection data analysis pipeline")
-        logger.info("Loading dataset from %s", dataset_dir)
+        logger.info("Starting deep learning pipeline")
 
-        loader = DatasetLoader(dataset_dir)
-        summary_df, image_records = loader.scan_dataset()
+        train_dataset, val_dataset, test_dataset, class_names = prepare_datasets(dataset_dir)
+        train_dataset = apply_augmentation(train_dataset, batch_size=32)
 
-        logger.info("Dataset scan complete. Preparing analysis and visuals")
+        model_path = models_dir / "best_model.keras"
+        weights_path = weights_dir / "best_weights.keras"
 
-        analyzer = DatasetAnalyzer()
-        stats = analyzer.compute_dataset_statistics(summary_df)
-        class_weights_df = analyzer.compute_class_weights(image_records)
-        dimensions_df = analyzer.analyze_image_dimensions(image_records)
+        if model_path.exists():
+            logger.info("Loading existing model from %s", model_path)
+            model = load_model_and_weights(model_path, weights_path)
+        else:
+            logger.info("Training a new model")
+            model = train_model(train_dataset, val_dataset, models_dir)
+            model.save(model_path)
+            model.save_weights(weights_path)
 
-        class_weights_df.to_csv(reports_dir / "class_weights.csv", index=False)
+        logger.info("Evaluating model")
+        evaluation_metrics = evaluate_model(model, test_dataset, class_names, reports_dir)
+        logger.info("Evaluation metrics: %s", evaluation_metrics)
 
-        statistics_reporter = StatisticsReporter()
-        statistics_reporter.print_summary(summary_df, stats, dimensions_df)
+        sample_image = None
+        for ext in ("*.jpeg", "*.jpg", "*.png", "*.bmp", "*.tiff", "*.webp"):
+            sample_image = next((dataset_dir / class_names[0]).glob(ext), None)
+            if sample_image is not None:
+                break
 
-        visualizer = VisualizationGenerator(graphs_dir)
-        visualizer.generate_all_graphs(summary_df, image_records, class_weights_df, dimensions_df)
+        if sample_image is not None and sample_image.exists():
+            predicted_label, confidence = predict_image(model, sample_image, class_names)
+            logger.info("Sample prediction: %s (%.4f)", predicted_label, confidence)
+            save_gradcam(sample_image, model, class_names, predictions_dir)
 
-        report_generator = ReportGenerator(project_dir)
-        report_generator.generate_analysis_report(summary_df, stats, dimensions_df, class_weights_df)
-        report_generator.ensure_project_files()
-
-        logger.info("Pipeline completed successfully")
-        print("\nSuccess: Analysis pipeline completed successfully.")
+        logger.info("Pipeline finished successfully")
+        print("Success: Deep learning pipeline finished successfully.")
+        print(f"Model saved to: {model_path}")
+        print(f"Weights saved to: {weights_path}")
         print(f"Reports saved to: {reports_dir}")
         print(f"Graphs saved to: {graphs_dir}")
+        print(f"Predictions saved to: {predictions_dir}")
     except Exception as exc:
-        logger.exception("Pipeline failed: %s", exc)
-        print(f"\nError: The analysis pipeline failed: {exc}")
+        logger.exception("Deep learning pipeline failed: %s", exc)
+        print(f"Error: {exc}")
 
 
 if __name__ == "__main__":
