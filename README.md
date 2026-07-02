@@ -22,27 +22,6 @@ The dataset contains images of sugarcane leaves in five classes:
 - Rust
 - Yellow
 
-## Environment Setup
-Create and activate a local Python virtual environment before installing dependencies:
-
-```bash
-cd Crop-Defect-Detection-V1
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-> Note: On macOS, use the virtual environment to avoid system package conflicts with TensorFlow and OpenCV.
-
-## How to Run
-Run the main pipeline:
-
-```bash
-source .venv/bin/activate
-python main.py
-```
-
 Run the Streamlit app:
 
 ```bash
@@ -64,6 +43,3 @@ After running the pipeline, the repository produces:
 - Model training currently uses `EfficientNetB0` as a frozen base and trains a custom top layer.
 - The project saves both the full model and separate weights.
 - `main.py` will load an existing model if `models/best_model.keras` exists.
-
-## Project Documentation
-See `PROJECT_DOCUMENTATION.md` for a full project summary, architecture details, setup instructions, and next steps.
